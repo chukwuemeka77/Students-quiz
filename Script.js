@@ -1,5 +1,32 @@
+ document.addEventListener("DOMContentLoaded", () => {
+    const startQuizBtn = document.getElementById("start-quiz");
+    const acceptTermsBtn = document.getElementById("acceptTerms");
+    let hasAcceptedTerms = false;
 
-document.addEventListener("DOMContentLoaded", () => {
+    // Show Terms & Conditions Modal
+    function showTermsModal() {
+        const termsModal = new bootstrap.Modal(document.getElementById("termsModal"));
+        termsModal.show();
+    }
+
+    // Handle Accept Terms Button
+    acceptTermsBtn.addEventListener("click", () => {
+        hasAcceptedTerms = true;
+        const termsModal = bootstrap.Modal.getInstance(document.getElementById("termsModal"));
+        termsModal.hide();
+    });
+
+    // Prevent Quiz Start Until Terms are Accepted
+    startQuizBtn.addEventListener("click", (e) => {
+        if (!hasAcceptedTerms) {
+            e.preventDefault();
+            showTermsModal();
+        } else {
+            startQuiz();
+        }
+    });
+});
+    
     const API_URL = "https://opentdb.com/api.php?amount=10&type=multiple&category=";
     const categoryMap = {
         html: 18,
