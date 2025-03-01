@@ -1,7 +1,8 @@
+
 document.addEventListener("DOMContentLoaded", () => {
     const API_URL = "https://opentdb.com/api.php?amount=10&type=multiple&category=";
     const categoryMap = {
-        html: 18,        // Example category ID
+        html: 18,
         css: 19,
         javascript: 20,
         angularjs: 21
@@ -12,6 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let score = 0;
     let timer;
     let timeLeft = 30;
+    let incorrectAnswers = [];
+    let username = prompt("Enter your name for the leaderboard:") || "Anonymous";
 
     const welcomeScreen = document.getElementById("welcome-screen");
     const quizSection = document.getElementById("quiz-section");
@@ -26,8 +29,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const nextQuestionBtn = document.getElementById("next-question");
     const finalScoreText = document.getElementById("final-score");
 
+    const reviewAnswersBtn = document.getElementById("review-answers");
+    const viewLeaderboardBtn = document.getElementById("view-leaderboard");
+    const backToHomeBtn = document.getElementById("back-to-home");
+
     startQuizBtn.addEventListener("click", startQuiz);
     nextQuestionBtn.addEventListener("click", nextQuestion);
+    reviewAnswersBtn.addEventListener("click", reviewIncorrectAnswers);
+    viewLeaderboardBtn.addEventListener("click", showLeaderboard);
+    backToHomeBtn.addEventListener("click", backToHome);
 
     async function startQuiz() {
         const category = categorySelect.value;
@@ -39,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
             questions = data.results;
             currentQuestionIndex = 0;
             score = 0;
+            incorrectAnswers = [];
 
             welcomeScreen.classList.add("d-none");
             quizSection.classList.remove("d-none");
@@ -65,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         answers.forEach(answer => {
             const button = document.createElement("button");
-            button.classList.add("btn", "btn-outline-primary", "w-100");
+            button.classList.add("btn", "btn-outline-primary", "w-100", "my-2");
             button.innerHTML = decodeHTML(answer);
             button.addEventListener("click", () => selectAnswer(answer, currentQuestion.correct_answer));
             answerButtons.appendChild(button);
@@ -87,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         } else {
+            incorrectAnswers.push(questions[currentQuestionIndex]);
             document.querySelectorAll("#answer-buttons button").forEach(btn => {
                 if (btn.innerHTML === decodeHTML(correct)) {
                     btn.classList.add("btn-success");
@@ -122,6 +134,28 @@ document.addEventListener("DOMContentLoaded", () => {
         quizSection.classList.add("d-none");
         resultsSection.classList.remove("d-none");
         finalScoreText.innerText = `Your score: ${score}/${questions.length}`;
+
+        saveScore(username, score);
+    }
+
+    function reviewIncorrectAnswers() {
+        resultsSection.classList.add("d-none");
+        quizSection.classList.remove("d-none");
+        currentQuestionIndex = 0;
+        questions = incorrectAnswers;
+        incorrectAnswers = [];
+        showQuestion();
+    }
+
+    function showLeaderboard() {
+        resultsSection.classList.add("d-none");
+        leaderboardSection.classList.remove("d-none");
+        loadLeaderboard();
+    }
+
+    function backToHome() {
+        leaderboardSection.classList.add("d-none");
+        welcomeScreen.classList.remove("d-none");
     }
 
     function decodeHTML(html) {
@@ -129,39 +163,4 @@ document.addEventListener("DOMContentLoaded", () => {
         text.innerHTML = html;
         return text.value;
     }
-    let incorrectAnswers = [];
-let username = prompt("Enter your name for the leaderboard:") || "Anonymous";
-
-// End Quiz and Save Score
-function endQuiz() {
-    quizSection.classList.add("d-none");
-    resultsSection.classList.remove("d-none");
-    finalScoreText.innerText = `Your score: ${score}/${questions.length}`;
-
-    saveScore(username, score);
-}
-
-// Review Incorrect Answers
-document.getElementById("review-answers").addEventListener("click", () => {
-    resultsSection.classList.add("d-none");
-    quizSection.classList.remove("d-none");
-    currentQuestionIndex = 0;
-    questions = incorrectAnswers;
-    incorrectAnswers = [];
-    showQuestion();
-});
-
-// View Leaderboard
-document.getElementById("view-leaderboard").addEventListener("click", () => {
-    resultsSection.classList.add("d-none");
-    leaderboardSection.classList.remove("d-none");
-    loadLeaderboard();
-});
-
-// Back to Home
-document.getElementById("back-to-home").addEventListener("click", () => {
-    leaderboardSection.classList.add("d-none");
-    welcomeScreen.classList.remove("d-none");
-});
-    
 });
