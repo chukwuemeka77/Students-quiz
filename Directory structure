@@ -1,0 +1,8 @@
+/exam-quiz-system
+│── index.html         # Main HTML file
+│── styles.css         # Custom styles
+│── script.js          # Core JavaScript logic
+│── db.js              # IndexedDB functions
+│── questions.js       # API integration or question storage
+│── assets/            # Images and icons (if needed)
+│── bootstrap/         # Bootstrap 5 CSS and JS files
