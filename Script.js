@@ -129,4 +129,39 @@ document.addEventListener("DOMContentLoaded", () => {
         text.innerHTML = html;
         return text.value;
     }
+    let incorrectAnswers = [];
+let username = prompt("Enter your name for the leaderboard:") || "Anonymous";
+
+// End Quiz and Save Score
+function endQuiz() {
+    quizSection.classList.add("d-none");
+    resultsSection.classList.remove("d-none");
+    finalScoreText.innerText = `Your score: ${score}/${questions.length}`;
+
+    saveScore(username, score);
+}
+
+// Review Incorrect Answers
+document.getElementById("review-answers").addEventListener("click", () => {
+    resultsSection.classList.add("d-none");
+    quizSection.classList.remove("d-none");
+    currentQuestionIndex = 0;
+    questions = incorrectAnswers;
+    incorrectAnswers = [];
+    showQuestion();
+});
+
+// View Leaderboard
+document.getElementById("view-leaderboard").addEventListener("click", () => {
+    resultsSection.classList.add("d-none");
+    leaderboardSection.classList.remove("d-none");
+    loadLeaderboard();
+});
+
+// Back to Home
+document.getElementById("back-to-home").addEventListener("click", () => {
+    leaderboardSection.classList.add("d-none");
+    welcomeScreen.classList.remove("d-none");
+});
+    
 });
