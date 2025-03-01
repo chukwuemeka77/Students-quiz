@@ -1,10 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const API_URL = "https://opentdb.com/api.php?amount=10&type=multiple&category=";
+const API_KEY = process.env.QUIZ_API_KEY;
+    // Store this in an environment variable
+    const API_URL = "https://quizapi.io/api/v1/questions";
     const categoryMap = {
-        html: "18",
-        css: "19",
-        javascript: "20",
-        angularjs: "21",
+        html: "HTML",
+        css: "CSS",
+        javascript: "JavaScript",
+        angularjs: "JavaScript" // QuizAPI.io may not have AngularJS specifically, so use JavaScript
     };
 
     const startQuizBtn = document.getElementById("start-quiz");
@@ -20,11 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentQuestionIndex = 0;
     let score = 0;
     let incorrectAnswers = [];
-    let totalTime = 30 * 60; // 30 minutes in seconds
+    let totalTime = 30 * 60; // 30 minutes
     let sessionTimer;
     let hasAcceptedTerms = false;
 
-    // Show Terms & Conditions Modal
     const termsModal = new bootstrap.Modal(document.getElementById("termsModal"));
     termsModal.show();
 
@@ -42,28 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    function startSessionTimer() {
-        sessionTimer = setInterval(() => {
-            const minutes = Math.floor(totalTime / 60);
-            const seconds = totalTime % 60;
-            timerDisplay.innerText = `Time Left: ${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-
-            if (totalTime <= 0) {
-                clearInterval(sessionTimer);
-                endQuiz();
-            }
-            totalTime--;
-        }, 1000);
-    }
-
     async function startQuiz() {
         const category = categorySelect.value;
-        const url = `${API_URL}${categoryMap[category]}`;
+        const url = `${API_URL}?apiKey=${API_KEY}&category=${categoryMap[category]}&difficulty=Medium&limit=10`;
 
         try {
             const response = await fetch(url);
             const data = await response.json();
-            questions = data.results;
+            questions = data;
             currentQuestionIndex = 0;
             score = 0;
             incorrectAnswers = [];
@@ -79,12 +66,26 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function startSessionTimer() {
+        sessionTimer = setInterval(() => {
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            timerDisplay.innerText = `Time Left: ${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+
+            if (totalTime <= 0) {
+                clearInterval(sessionTimer);
+                endQuiz();
+            }
+            totalTime--;
+        }, 1000);
+    }
+
     function showQuestion() {
         const currentQuestion = questions[currentQuestionIndex];
         questionEl.innerHTML = currentQuestion.question;
         answersEl.innerHTML = "";
 
-        const options = [...currentQuestion.incorrect_answers, currentQuestion.correct_answer].sort(() => Math.random() - 0.5);
+        const options = Object.values(currentQuestion.answers).filter((answer) => answer !== null);
 
         options.forEach((answer) => {
             const button = document.createElement("button");
