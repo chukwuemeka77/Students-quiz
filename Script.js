@@ -1,70 +1,60 @@
- document.addEventListener("DOMContentLoaded", () => {
-    const startQuizBtn = document.getElementById("start-quiz");
-    const acceptTermsBtn = document.getElementById("acceptTerms");
-    let hasAcceptedTerms = false;
-
-    // Show Terms & Conditions Modal
-    function showTermsModal() {
-        const termsModal = new bootstrap.Modal(document.getElementById("termsModal"));
-        termsModal.show();
-    }
-
-    // Handle Accept Terms Button
-    acceptTermsBtn.addEventListener("click", () => {
-        hasAcceptedTerms = true;
-        const termsModal = bootstrap.Modal.getInstance(document.getElementById("termsModal"));
-        termsModal.hide();
-    });
-
-    // Prevent Quiz Start Until Terms are Accepted
-    startQuizBtn.addEventListener("click", (e) => {
-        if (!hasAcceptedTerms) {
-            e.preventDefault();
-            showTermsModal();
-        } else {
-            startQuiz();
-        }
-    });
-});
-    
+document.addEventListener("DOMContentLoaded", () => {
     const API_URL = "https://opentdb.com/api.php?amount=10&type=multiple&category=";
     const categoryMap = {
-        html: 18,
-        css: 19,
-        javascript: 20,
-        angularjs: 21
+        html: "18",
+        css: "19",
+        javascript: "20",
+        angularjs: "21",
     };
+
+    const startQuizBtn = document.getElementById("start-quiz");
+    const categorySelect = document.getElementById("categorySelect");
+    const quizSection = document.getElementById("quiz-section");
+    const welcomeScreen = document.getElementById("welcome-screen");
+    const timerDisplay = document.getElementById("timer");
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const nextBtn = document.getElementById("next-btn");
 
     let questions = [];
     let currentQuestionIndex = 0;
     let score = 0;
-    let timer;
-    let timeLeft = 30;
     let incorrectAnswers = [];
-    let username = prompt("Enter your name for the leaderboard:") || "Anonymous";
+    let totalTime = 30 * 60; // 30 minutes in seconds
+    let sessionTimer;
+    let hasAcceptedTerms = false;
 
-    const welcomeScreen = document.getElementById("welcome-screen");
-    const quizSection = document.getElementById("quiz-section");
-    const resultsSection = document.getElementById("results-section");
-    const leaderboardSection = document.getElementById("leaderboard-section");
+    // Show Terms & Conditions Modal
+    const termsModal = new bootstrap.Modal(document.getElementById("termsModal"));
+    termsModal.show();
 
-    const categorySelect = document.getElementById("category-select");
-    const startQuizBtn = document.getElementById("start-quiz");
-    const questionText = document.getElementById("question-text");
-    const answerButtons = document.getElementById("answer-buttons");
-    const timerDisplay = document.getElementById("timer");
-    const nextQuestionBtn = document.getElementById("next-question");
-    const finalScoreText = document.getElementById("final-score");
+    document.getElementById("acceptTerms").addEventListener("click", () => {
+        hasAcceptedTerms = true;
+        termsModal.hide();
+    });
 
-    const reviewAnswersBtn = document.getElementById("review-answers");
-    const viewLeaderboardBtn = document.getElementById("view-leaderboard");
-    const backToHomeBtn = document.getElementById("back-to-home");
+    startQuizBtn.addEventListener("click", (e) => {
+        if (!hasAcceptedTerms) {
+            e.preventDefault();
+            termsModal.show();
+        } else {
+            startQuiz();
+        }
+    });
 
-    startQuizBtn.addEventListener("click", startQuiz);
-    nextQuestionBtn.addEventListener("click", nextQuestion);
-    reviewAnswersBtn.addEventListener("click", reviewIncorrectAnswers);
-    viewLeaderboardBtn.addEventListener("click", showLeaderboard);
-    backToHomeBtn.addEventListener("click", backToHome);
+    function startSessionTimer() {
+        sessionTimer = setInterval(() => {
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            timerDisplay.innerText = `Time Left: ${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+
+            if (totalTime <= 0) {
+                clearInterval(sessionTimer);
+                endQuiz();
+            }
+            totalTime--;
+        }, 1000);
+    }
 
     async function startQuiz() {
         const category = categorySelect.value;
@@ -77,10 +67,12 @@
             currentQuestionIndex = 0;
             score = 0;
             incorrectAnswers = [];
+            totalTime = 30 * 60;
 
             welcomeScreen.classList.add("d-none");
             quizSection.classList.remove("d-none");
 
+            startSessionTimer();
             showQuestion();
         } catch (error) {
             console.error("Error fetching questions:", error);
@@ -88,106 +80,50 @@
     }
 
     function showQuestion() {
-        if (currentQuestionIndex >= questions.length) {
-            endQuiz();
-            return;
-        }
-
-        resetState();
         const currentQuestion = questions[currentQuestionIndex];
+        questionEl.innerHTML = currentQuestion.question;
+        answersEl.innerHTML = "";
 
-        questionText.innerHTML = decodeHTML(currentQuestion.question);
+        const options = [...currentQuestion.incorrect_answers, currentQuestion.correct_answer].sort(() => Math.random() - 0.5);
 
-        const answers = [...currentQuestion.incorrect_answers, currentQuestion.correct_answer];
-        answers.sort(() => Math.random() - 0.5);
-
-        answers.forEach(answer => {
+        options.forEach((answer) => {
             const button = document.createElement("button");
-            button.classList.add("btn", "btn-outline-primary", "w-100", "my-2");
-            button.innerHTML = decodeHTML(answer);
+            button.classList.add("btn", "btn-outline-primary", "d-block", "mt-2");
+            button.innerText = answer;
             button.addEventListener("click", () => selectAnswer(answer, currentQuestion.correct_answer));
-            answerButtons.appendChild(button);
+            answersEl.appendChild(button);
         });
-
-        timeLeft = 30;
-        updateTimer();
-        timer = setInterval(updateTimer, 1000);
     }
 
     function selectAnswer(selected, correct) {
-        clearInterval(timer);
-
         if (selected === correct) {
             score++;
-            document.querySelectorAll("#answer-buttons button").forEach(btn => {
-                if (btn.innerHTML === decodeHTML(correct)) {
-                    btn.classList.add("btn-success");
-                }
-            });
         } else {
-            incorrectAnswers.push(questions[currentQuestionIndex]);
-            document.querySelectorAll("#answer-buttons button").forEach(btn => {
-                if (btn.innerHTML === decodeHTML(correct)) {
-                    btn.classList.add("btn-success");
-                } else if (btn.innerHTML === decodeHTML(selected)) {
-                    btn.classList.add("btn-danger");
-                }
-            });
+            incorrectAnswers.push({ question: questions[currentQuestionIndex].question, correct });
         }
 
-        nextQuestionBtn.classList.remove("d-none");
-    }
-
-    function nextQuestion() {
-        currentQuestionIndex++;
-        showQuestion();
-    }
-
-    function updateTimer() {
-        timerDisplay.innerText = `Time: ${timeLeft}s`;
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            nextQuestion();
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            showQuestion();
+        } else {
+            endQuiz();
         }
-        timeLeft--;
-    }
-
-    function resetState() {
-        answerButtons.innerHTML = "";
-        nextQuestionBtn.classList.add("d-none");
     }
 
     function endQuiz() {
+        clearInterval(sessionTimer);
         quizSection.classList.add("d-none");
-        resultsSection.classList.remove("d-none");
-        finalScoreText.innerText = `Your score: ${score}/${questions.length}`;
 
-        saveScore(username, score);
+        document.getElementById("review-list").innerHTML = incorrectAnswers
+            .map((item) => `<p><strong>Q:</strong> ${item.question} <br> <strong>Correct Answer:</strong> ${item.correct}</p>`)
+            .join("");
+
+        document.getElementById("review-section").classList.remove("d-none");
     }
 
-    function reviewIncorrectAnswers() {
-        resultsSection.classList.add("d-none");
-        quizSection.classList.remove("d-none");
-        currentQuestionIndex = 0;
-        questions = incorrectAnswers;
-        incorrectAnswers = [];
-        showQuestion();
-    }
-
-    function showLeaderboard() {
-        resultsSection.classList.add("d-none");
-        leaderboardSection.classList.remove("d-none");
-        loadLeaderboard();
-    }
-
-    function backToHome() {
-        leaderboardSection.classList.add("d-none");
+    document.getElementById("restart-btn").addEventListener("click", () => {
+        document.getElementById("review-section").classList.add("d-none");
         welcomeScreen.classList.remove("d-none");
-    }
-
-    function decodeHTML(html) {
-        const text = document.createElement("textarea");
-        text.innerHTML = html;
-        return text.value;
-    }
+    });
 });
+                          
