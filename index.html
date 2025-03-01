@@ -50,7 +50,38 @@
         <button id="back-to-home" class="btn btn-secondary mt-3">Back to Home</button>
     </div>
 </div>
+<!-- Terms & Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Terms & Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6><strong>Disclaimer</strong></h6>
+                <p>This quiz system is intended solely for **educational purposes** to help students prepare for Aptech Computer Education exams on HTML, CSS, JavaScript, and AngularJS.</p>
 
+                <p>By using this quiz platform, you agree to the following terms:</p>
+
+                <ul>
+                    <li>This quiz is for **learning and self-assessment only**. It is not affiliated with any official Aptech exam body.</li>
+                    <li>Questions are sourced dynamically and may not reflect actual exam questions.</li>
+                    <li>Any attempt to misuse, distribute, or claim ownership of this system is strictly prohibited.</li>
+                    <li>Your progress may be stored locally on your device to enhance the learning experience.</li>
+                    <li>The developers are not responsible for any academic decisions made based on quiz performance.</li>
+                </ul>
+
+                <p>To proceed, you must accept these terms.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Decline</button>
+                <button type="button" class="btn btn-primary" id="acceptTerms">Accept & Continue</button>
+            </div>
+        </div>
+    </div>
+</div>                                                                                                      </div>
+    
 <script src="script.js"></script>
 <script src="db.js"></script>
 </body>
